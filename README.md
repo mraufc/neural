@@ -8,7 +8,7 @@ Currently the code is in need of a review from someone who is much more experien
 Usage
 =======
 
-See [here](https://github.com/mraufc/neural/example_neural_test.go) for examples.
+See [here](https://github.com/mraufc/neural/blob/master/example_neural_test.go) for examples.
 
 Documentation
 =======
