@@ -10,22 +10,22 @@ import (
 
 // Network is the basic neural network structure
 type Network struct {
-	calculatedWeightGradients []*mat.Dense // for gradient checking
-	calculatedBiasGradients   []*mat.Dense // for gradient checking
-	activations               []*mat.Dense
-	activity                  []*mat.Dense
-	weights                   []*mat.Dense
-	biases                    []*mat.Dense
-	activationFunctions       []*ActivationFunc
-	hiddenLayers              []int
-	inputLayerSize            int
-	outputLayerSize           int
-	dCostdWeights             []*mat.Dense
-	dCostdWeightsScaled       []*mat.Dense
-	dCostdBiases              []*mat.Dense
-	dCostdBiasesScaled        []*mat.Dense
-	dCostdActivations         []*mat.Dense
-	dActivitydActivations     []*mat.Dense
+	numericalWeightGradients []*mat.Dense // for gradient checking
+	numericalBiasGradients   []*mat.Dense // for gradient checking
+	activations              []*mat.Dense
+	activity                 []*mat.Dense
+	weights                  []*mat.Dense
+	biases                   []*mat.Dense
+	activationFunctions      []*ActivationFunc
+	hiddenLayers             []int
+	inputLayerSize           int
+	outputLayerSize          int
+	dCostdWeights            []*mat.Dense
+	dCostdWeightsScaled      []*mat.Dense
+	dCostdBiases             []*mat.Dense
+	dCostdBiasesScaled       []*mat.Dense
+	dCostdActivations        []*mat.Dense
+	dActivitydActivations    []*mat.Dense
 }
 
 // NewNetwork initializes a new neural network.
@@ -285,6 +285,7 @@ func (nn *Network) cost(expected *mat.Dense) float64 {
 }
 
 // Train trains the network to fit the expected data.
+// maxIterations is the iteration count limit. Negative or 0 maxIterations value means the training will continue until convergance.
 func (nn *Network) Train(data, expected *mat.Dense, maxIterations int, lrFunc func(currentIteration int) (learningRate float64), convFunc func(prevCost, currentCost float64) (converged bool)) error {
 	if err := nn.checkDimensions(data, expected); err != nil {
 		return err
@@ -292,7 +293,10 @@ func (nn *Network) Train(data, expected *mat.Dense, maxIterations int, lrFunc fu
 	nn.forward(data)
 	var prevCost, currentCost float64
 	prevCost = nn.cost(expected)
-	for i := 0; i < maxIterations; i++ {
+	for i := 0; ; i++ {
+		if maxIterations > 0 && i >= maxIterations {
+			break
+		}
 		nn.backpropagation(data, expected)
 		lr := lrFunc(i + 1)
 		for k, dCdW := range nn.dCostdWeights {
@@ -375,18 +379,21 @@ func (nn *Network) backpropagation(data, expected *mat.Dense) {
 	}
 }
 
-// CheckGradients is a utility function that compares calculated gradients and backpropagation gradients.
+// CheckGradients is a utility function that compares numerical gradients and backpropagation gradients.
 // This is a computationally heavy operation and should only be used for ensuring that backpropagation in the network is working as expected.
 // Returns an error in case of a dimension mismatch.
+//
 // This function takes 4 arguments. Input data, expected output, a function that generates epsilon value based on the original weight or bias value (epsilonFunc),
-// and a function that outputs whether calculated value to backpropagated value comparison is a pass or fail, or if the comparison should be skipped (validFunc).
-func (nn *Network) CheckGradients(data, expected *mat.Dense, epsilonFunc func(value float64) (epsilon float64), validFunc func(calcVal, backpVal float64) (valid bool, skip bool)) (bool, error) {
+// and a function that outputs whether numerical value to backpropagated value comparison is a pass or fail, or if the comparison should be skipped (validFunc).
+//
+// The numerical gradients are calculated as [cost(w+epsilon) - cost(w-epsilon)] / [2 * epsilon]
+func (nn *Network) CheckGradients(data, expected *mat.Dense, epsilonFunc func(value float64) (epsilon float64), validFunc func(numericalGrad, backpGrad, val float64) (valid bool, skip bool)) (bool, error) {
 	// TODO: checkDimensions function is called twice due to combining two exposed (public) functions
 	bpW, bpB, err := nn.Gradients(data, expected)
 	if err != nil {
 		return false, err
 	}
-	calcW, calcB, err := nn.CalculatedGradients(data, expected, epsilonFunc)
+	calcW, calcB, err := nn.NumericalGradients(data, expected, epsilonFunc)
 	if err != nil {
 		return false, err
 	}
@@ -397,7 +404,7 @@ func (nn *Network) CheckGradients(data, expected *mat.Dense, epsilonFunc func(va
 		r, c := dW.Dims()
 		for i := 0; i < r; i++ {
 			for j := 0; j < c; j++ {
-				valid, skip := validFunc(cW.At(i, j), dW.At(i, j))
+				valid, skip := validFunc(cW.At(i, j), dW.At(i, j), nn.weights[k].At(i, j))
 				if skip {
 					continue
 				}
@@ -414,7 +421,7 @@ func (nn *Network) CheckGradients(data, expected *mat.Dense, epsilonFunc func(va
 		r, c := dB.Dims()
 		for i := 0; i < r; i++ {
 			for j := 0; j < c; j++ {
-				valid, skip := validFunc(cB.At(i, j), dB.At(i, j))
+				valid, skip := validFunc(cB.At(i, j), dB.At(i, j), nn.biases[k].At(i, j))
 				if skip {
 					continue
 				}
@@ -451,12 +458,12 @@ func (nn *Network) Gradients(data, expected *mat.Dense) (weightGradients, biasGr
 	return
 }
 
-// CalculatedGradients calculates and returns the gradients of all weights and biases in the network.
+// NumericalGradients calculates and returns the gradients of all weights and biases in the network.
 // This is a computationally heavy operation and should only be used for inspecting the network.
 // Meaning, this function is only good for debugging operations.
 // The function takes 3 inputs. Data, expected data and a function that generates epsilon value based on the original weight or bias value.
-// The gradient is calculated as [cost(w+epsilon) - cost(w-epsilon)] / [2 * epsilon]
-func (nn *Network) CalculatedGradients(data, expected *mat.Dense, epsilonFunc func(value float64) (epsilon float64)) (weightGradients, biasGradients []*mat.Dense, err error) {
+// The numerical gradients are calculated as [cost(w+epsilon) - cost(w-epsilon)] / [2 * epsilon]
+func (nn *Network) NumericalGradients(data, expected *mat.Dense, epsilonFunc func(value float64) (epsilon float64)) (weightGradients, biasGradients []*mat.Dense, err error) {
 	err = nn.checkDimensions(data, expected)
 	if err != nil {
 		return
