@@ -2,7 +2,6 @@ package neural_test
 
 import (
 	"fmt"
-	"log"
 	"math"
 
 	"github.com/mraufc/neural"
@@ -58,23 +57,24 @@ func ExampleNetwork_Train() {
 	n.AddHiddenLayer(5, neural.ActivationFuncReLu)
 	n.AddOutputLayer(1, neural.ActivationFuncLinear)
 
-	weights := make([]*mat.Dense, 2)
-	weights[0] = mat.NewDense(5, 2, []float64{1, 1, 1, 1, 1, 1, 1, 1, 1, 1})
-	weights[1] = mat.NewDense(1, 5, []float64{1, 1, 1, 1, 1})
-	err = n.SetWeights(weights)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// It is possible to set weights and biases for this example to behave in a more predictable way.
+	// weights := make([]*mat.Dense, 2)
+	// weights[0] = mat.NewDense(5, 2, []float64{1, 1, 1, 1, 1, 1, 1, 1, 1, 1})
+	// weights[1] = mat.NewDense(1, 5, []float64{1, 1, 1, 1, 1})
+	// err = n.SetWeights(weights)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
-	biases := make([]*mat.Dense, 2)
-	biases[0] = mat.NewDense(1, 5, []float64{1, 1, 1, 1, 1})
-	biases[1] = mat.NewDense(1, 1, []float64{0})
-	err = n.SetBiases(biases)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// biases := make([]*mat.Dense, 2)
+	// biases[0] = mat.NewDense(1, 5, []float64{1, 1, 1, 1, 1})
+	// biases[1] = mat.NewDense(1, 1, []float64{0})
+	// err = n.SetBiases(biases)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
 	data := mat.NewDense(9, 2, []float64{1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9})
 	expected := mat.NewDense(9, 1, []float64{2, 4, 6, 8, 10, 12, 14, 16, 18})
@@ -84,15 +84,15 @@ func ExampleNetwork_Train() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("cost is less than before training 1e-4:", cost < 1e-4)
+	fmt.Println("cost is less than before training 1e-3:", cost < 1e-3)
 
 	// constant learning rate
 	lrFunc := func(currentIteration int) float64 {
 		return 1e-4
 	}
-	// converge when cost is less than 1e-4
+	// converge when cost is less than 1e-3
 	convFunc := func(prevCost, currentCost float64) bool {
-		return currentCost < 1e-4
+		return currentCost < 1e-3
 	}
 	err = n.Train(data, expected, 0, lrFunc, convFunc)
 	if err != nil {
@@ -105,10 +105,10 @@ func ExampleNetwork_Train() {
 		return
 	}
 
-	fmt.Println("cost is less than after training 1e-4:", cost < 1e-4)
+	fmt.Println("cost is less than after training 1e-3:", cost < 1e-3)
 	// Output:
-	// cost is less than before training 1e-4: false
-	// cost is less than after training 1e-4: true
+	// cost is less than before training 1e-3: false
+	// cost is less than after training 1e-3: true
 }
 
 func ExampleNetwork_CheckGradients() {
@@ -120,23 +120,24 @@ func ExampleNetwork_CheckGradients() {
 	n.AddHiddenLayer(5, neural.ActivationFuncTanH)
 	n.AddOutputLayer(1, neural.ActivationFuncLinear)
 
-	weights := make([]*mat.Dense, 2)
-	weights[0] = mat.NewDense(5, 2, []float64{1, 1, 1, 1, 1, 1, 1, 1, 1, 1})
-	weights[1] = mat.NewDense(1, 5, []float64{1, 1, 1, 1, 1})
-	err = n.SetWeights(weights)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// It is possible to set weights and biases for this example to behave in a more predictable way.
+	// weights := make([]*mat.Dense, 2)
+	// weights[0] = mat.NewDense(5, 2, []float64{1, 1, 1, 1, 1, 1, 1, 1, 1, 1})
+	// weights[1] = mat.NewDense(1, 5, []float64{1, 1, 1, 1, 1})
+	// err = n.SetWeights(weights)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
-	biases := make([]*mat.Dense, 2)
-	biases[0] = mat.NewDense(1, 5, []float64{1, 1, 1, 1, 1})
-	biases[1] = mat.NewDense(1, 1, []float64{0})
-	err = n.SetBiases(biases)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// biases := make([]*mat.Dense, 2)
+	// biases[0] = mat.NewDense(1, 5, []float64{1, 1, 1, 1, 1})
+	// biases[1] = mat.NewDense(1, 1, []float64{0})
+	// err = n.SetBiases(biases)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
 	data := mat.NewDense(9, 2, []float64{1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9})
 	expected := mat.NewDense(9, 1, []float64{2, 4, 6, 8, 10, 12, 14, 16, 18})
@@ -148,9 +149,12 @@ func ExampleNetwork_CheckGradients() {
 	}
 
 	validFunc := func(numericalGrad, backpGrad, val float64) (valid bool, skip bool) {
-		log.Println("diff:", math.Abs(numericalGrad-backpGrad)/math.Max(math.Abs(numericalGrad), math.Abs(backpGrad)))
-		if math.Abs(numericalGrad-backpGrad)/math.Max(math.Abs(numericalGrad), math.Abs(backpGrad)) <= 1e-7 {
+		d := math.Abs(numericalGrad-backpGrad) / math.Max(math.Abs(numericalGrad), math.Abs(backpGrad))
+
+		if d <= 1e-6 {
 			valid = true
+		} else {
+			fmt.Printf("%v is not less than or equal to 1e-6\n", d)
 		}
 		return
 	}
@@ -163,6 +167,7 @@ func ExampleNetwork_CheckGradients() {
 	fmt.Println("gradient check before training is successful:", gradientCheck)
 
 	// do some training for 500 iterations
+
 	// constant learning rate
 	lrFunc := func(currentIteration int) float64 {
 		return 1e-4
