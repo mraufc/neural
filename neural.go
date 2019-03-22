@@ -330,15 +330,15 @@ func (nn *Network) Train(data, expected *mat.Dense, maxIterations int, lrFunc fu
 // Backpropagation:
 // Cost         = (prediction - expected)^2 = (A2 - expected)^2
 // dCost/dW2	= [(dCost/dA2)]       * [(dA2/dZ2)] * [(dZ2/dW2)]
-//				= [2 * (A2-expected)] * [f'(Z2)]    * [A1]
+//              = [2 * (A2-expected)] * [f'(Z2)]    * [A1]
 // dCost/dB2	= [(dCost/dA2)]       * [(dA2/dZ2)] * [(dZ2/dB2)]
-//				= [2 * (A2-expected)] * [f'(Z2) ]   * [1]
+//              = [2 * (A2-expected)] * [f'(Z2) ]   * [1]
 // dCost/dA1	= [(dCost/dA2)]       * [(dA2/dZ2)] * [(dZ2/dA1)]
-//				= [2 * (A2-expected)] * [f'(Z2)]    * [W2]
+//              = [2 * (A2-expected)] * [f'(Z2)]    * [W2]
 // dCost/dW1	= [(dCost/dA1)]                     * [(dA1/dZ1)] * [(dZ1/dW1)]
-//				= [2 * (A2-expected) * f'(Z2) * W2] * [f'(Z1)]    * [X]
+//              = [2 * (A2-expected) * f'(Z2) * W2] * [f'(Z1)]    * [X]
 // dCost/dB1	= [(dCost/dA1)]                     * [(dA1/dZ1)] * [(dZ1/dB1)]
-//				= [2 * (A2-expected) * f'(Z2) * W2] * [f'(Z1)]    * [1]
+//              = [2 * (A2-expected) * f'(Z2) * W2] * [f'(Z1)]    * [1]
 func (nn *Network) backpropagation(data, expected *mat.Dense) {
 	hiddenLayerCount := len(nn.hiddenLayers)
 	numExamples, _ := data.Dims()
