@@ -1,3 +1,5 @@
+// Package neural is an experimental neural network implementation written in Go
+// by a complete newbie in this topic for self-educational purposes.
 package neural
 
 import (
