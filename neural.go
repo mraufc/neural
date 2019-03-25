@@ -232,8 +232,6 @@ func (nn *Network) Predict(data *mat.Dense) (*mat.Dense, error) {
 }
 
 func (nn *Network) forward(data *mat.Dense) {
-	// log.Println("weights 0:", nn.weights[0])
-	// log.Println(nn.weights[1])
 	numExamples, _ := data.Dims()
 
 	hiddenLayerCount := len(nn.hiddenLayers)
