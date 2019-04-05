@@ -355,7 +355,7 @@ func (nn *Network) backpropagation(data, expected *mat.Dense) {
 		if k == hiddenLayerCount {
 			nn.dCostdActivations[k] = mat.NewDense(numExamples, nn.outputLayerSize, nil)
 			nn.dCostdActivations[k].Apply(func(i, j int, v float64) float64 {
-				return 2.0 * (nn.activity[k].At(i, j) - v) / float64(numExamples)
+				return 2.0 * (nn.activity[k].At(i, j) - v)
 			}, expected)
 		} else {
 			nn.dCostdActivations[k] = mat.NewDense(numExamples, nn.hiddenLayers[k], nil)
@@ -369,6 +369,8 @@ func (nn *Network) backpropagation(data, expected *mat.Dense) {
 			nn.dCostdWeights[k].Mul(nn.dCostdActivations[k].T(), data)
 		}
 
+		nn.dCostdWeights[k].Scale(1.0/float64(numExamples), nn.dCostdWeights[k])
+
 		_, bc := nn.dCostdBiases[k].Dims()
 		for j := 0; j < bc; j++ {
 			nn.dCostdBiases[k].Set(0, j, 0.0)
@@ -376,6 +378,8 @@ func (nn *Network) backpropagation(data, expected *mat.Dense) {
 				nn.dCostdBiases[k].Set(0, j, nn.dCostdBiases[k].At(0, j)+nn.dCostdActivations[k].At(i, j))
 			}
 		}
+
+		nn.dCostdBiases[k].Scale(1.0/float64(numExamples), nn.dCostdBiases[k])
 	}
 }
 
